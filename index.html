@@ -282,6 +282,49 @@
     .snackbar.show { transform: translateX(-50%) translateY(0); }
     .snackbar-btn { color: #D0BCFF; font-weight: 500; cursor: pointer; background: none; border: none; font-family: 'Google Sans', sans-serif; font-size: 14px; }
 
+
+    /* MODAL */
+    .modal-scrim {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.5); align-items: flex-end; justify-content: center;
+    }
+    .modal-scrim.show { display: flex; animation: scrimIn .25s ease; }
+    @keyframes scrimIn { from{opacity:0} to{opacity:1} }
+    .modal {
+      background: var(--surface-container);
+      border-radius: 28px 28px 0 0;
+      width: 100%; max-width: 640px;
+      max-height: 85vh; display: flex; flex-direction: column;
+      animation: modalUp .3s cubic-bezier(.05,.7,.1,1);
+      transition: background .3s;
+    }
+    @keyframes modalUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .modal-handle {
+      width: 32px; height: 4px; border-radius: 2px;
+      background: var(--outline-variant); margin: 12px auto 0; flex-shrink: 0;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 8px; flex-shrink: 0;
+    }
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-body { overflow-y: auto; padding: 8px 20px 32px; flex: 1; }
+    .modal-release { padding: 16px 0; border-bottom: 1px solid var(--outline-variant); }
+    .modal-release:last-child { border-bottom: none; }
+    .modal-release-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .modal-release-body {
+      font-size: 13px; color: var(--on-surface-variant); line-height: 1.7; white-space: pre-wrap;
+    }
+    .btn-text {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 40px; border: none; background: transparent;
+      color: var(--primary); font-family: 'Google Sans', sans-serif;
+      font-size: 14px; font-weight: 500; cursor: pointer; border-radius: 20px;
+      padding: 0 12px; transition: background .2s;
+    }
+    .btn-text:hover { background: rgba(103,80,164,.1); }
+    .btn-text .material-symbols-rounded { font-size: 18px; }
+
     .footer { text-align: center; font-size: 12px; color: var(--on-surface-variant); opacity: .7; line-height: 1.8; }
     .footer a { color: var(--primary); text-decoration: none; }
   </style>
@@ -400,6 +443,10 @@
         <span data-i18n="loadingReleases"></span>
       </div>
     </div>
+    <button class="btn-text" onclick="openModal()">
+      <span class="material-symbols-rounded">open_in_full</span>
+      <span data-i18n="viewAll"></span>
+    </button>
   </div>
 
   <!-- LINKS -->
@@ -417,6 +464,21 @@
     SkidBGone — MIT License<br>
     Made with 💀 by <a href="https://github.com/labubuahhginger" target="_blank">labubuahhginger</a><br>
     Skiddy was here.
+  </div>
+</div>
+
+<!-- CHANGELOG MODAL -->
+<div class="modal-scrim" id="modalScrim" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" data-i18n="changelog"></span>
+      <button class="icon-btn" onclick="closeModal()">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody">
+    </div>
   </div>
 </div>
 
@@ -443,6 +505,7 @@
       wiringNote: "Press BOOT button after flashing to start Skiddy.",
       changelog: "Changelog",
       links: "Links",
+      viewAll: "View full changelog",
       skidbgoneRepo: "SkidBGone on GitHub",
       flasherRepo: "Flasher on GitHub",
       notConnected: "Not connected",
@@ -496,6 +559,7 @@
       wiringNote: "После прошивки нажми кнопку BOOT, чтобы запустить Скидди.",
       changelog: "Изменения",
       links: "Ссылки",
+      viewAll: "Полный список изменений",
       skidbgoneRepo: "SkidBGone на GitHub",
       flasherRepo: "Флашер на GitHub",
       notConnected: "Не подключено",
@@ -840,6 +904,48 @@
       document.getElementById('connectBtn').disabled = false;
     }
   }
+
+  // ── MODAL ─────────────────────────────────────────
+  function openModal() {
+    const body = document.getElementById('modalBody');
+    if (!releases.length) {
+      body.innerHTML = `<div class="release-loading" style="padding:16px 0">${t('noReleases')}</div>`;
+    } else {
+      const locale = lang === 'ru' ? 'ru-RU' : 'en-GB';
+      body.innerHTML = releases.map(r => {
+        const date = new Date(r.published_at).toLocaleDateString(locale, {day:'numeric',month:'long',year:'numeric'});
+        const body_text = r.body
+          ? r.body
+              .replace(/### /g, '\n### ')
+              .replace(/## /g, '\n## ')
+              .trim()
+          : '—';
+        return `<div class="modal-release">
+          <div class="modal-release-header">
+            <div class="release-ver">${r.tag_name}</div>
+            <div>
+              <div style="font-size:14px;font-weight:500">${r.name || r.tag_name}</div>
+              <div style="font-size:12px;color:var(--on-surface-variant)">${date}</div>
+            </div>
+          </div>
+          <div class="modal-release-body">${body_text}</div>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('modalScrim').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modalScrim').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modalScrim')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 </script>

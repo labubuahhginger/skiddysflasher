@@ -68,8 +68,11 @@
     }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     .hero-ascii-title {
-      font-family: 'Google Sans Mono', monospace; font-size: 9px; line-height: 1.4;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 8px; line-height: 1.25;
       color: var(--on-primary-container); white-space: pre; opacity: .85;
+      letter-spacing: -0.3px; word-spacing: 0;
+      display: block; text-align: left;
     }
     .hero-tagline { font-size: 16px; color: var(--on-surface-variant); max-width: 400px; line-height: 1.6; }
     .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -239,8 +242,7 @@
      (  v  )
     /|     |\
     _|_____|_</div>
-  <pre class="hero-ascii-title">
-_____ __   _     ______  ______
+  <pre class="hero-ascii-title">   _____ __   _     ______  ______
   / ___// /__(_)___/ / __ )/ ____/___  ____  ___
   \__ \/ //_/ / __  / __  / / __/ __ \/ __ \/ _ \
  ___/ / ,< / / /_/ / /_/ / /_/ / /_/ / / / /  __/

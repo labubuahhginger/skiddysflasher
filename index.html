@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SkidBGone Flasher</title>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Mono&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/esptool-js@0.4.3/bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
   <style>
     /* ── LIGHT THEME ── */
     :root {
@@ -675,32 +677,61 @@
     document.getElementById('progressPct').textContent = ind ? '' : pct+'%';
   }
 
+  // ── ESPTOOL STATE ─────────────────────────────────
+  let espDevice = null;
+  let transport = null;
+
   // ── CONNECT ───────────────────────────────────────
   async function handleConnect() {
     if (connected) { await doDisconnect(); return; }
     try {
       port = await navigator.serial.requestPort();
-      await port.open({ baudRate: 115200 });
+      transport = new ESPLoader.Transport(port, true);
+
+      const loaderOpts = {
+        transport,
+        baudrate: 115200,
+        terminal: {
+          clean() {},
+          writeLine(data) { log(data, 'info'); },
+          write(data) { if (data.trim()) log(data.trim(), 'info'); }
+        },
+        enableTracing: false,
+      };
+
+      setStatus(t('logConnectBootloader'), '', 'busy');
+      setProgress(true, true, 0, t('logConnectBootloader'));
+      log(t('logConnectBootloader'), 'info');
+
+      espDevice = new ESPLoader.ESPLoader(loaderOpts);
+      await espDevice.main();
+
+      const chip = espDevice.chip.CHIP_NAME;
       connected = true;
-      setStatus(t('connected'), t('deviceReady'), 'connected');
+      setProgress(false);
+      setStatus(t('connected'), `${chip} — ${t('deviceReady')}`, 'connected');
       document.getElementById('connectBtn').innerHTML =
         `<span class="material-symbols-rounded">cable</span>${t('disconnect')}`;
       document.getElementById('flashBtn').disabled = false;
       document.getElementById('eraseBtn').disabled = false;
-      log(t('logConnected'), 'ok');
+      log(`${t('logConnected')} — ${chip}`, 'ok');
       showSnack(t('snackConnected'));
     } catch(e) {
       if (e.name !== 'NotFoundError') {
         setStatus(t('connFailed'), e.message, 'error');
         log('Error: ' + e.message, 'err');
         showSnack(t('snackConnFailed'));
+        setProgress(false);
+        try { if (transport) await transport.disconnect(); } catch {}
+        port = null; transport = null; espDevice = null;
       }
     }
   }
 
   async function doDisconnect() {
+    try { if (transport) await transport.disconnect(); } catch {}
     try { if (port) await port.close(); } catch {}
-    port = null; connected = false;
+    port = null; transport = null; espDevice = null; connected = false;
     setStatus(t('notConnected'), t('connectHint'), '');
     document.getElementById('connectBtn').innerHTML =
       `<span class="material-symbols-rounded">cable</span>${t('connectDevice')}`;
@@ -712,60 +743,102 @@
 
   // ── FLASH ─────────────────────────────────────────
   async function handleFlash() {
-    if (!connected || !selectedRelease) { showSnack(t('noReleaseSelected')); return; }
+    if (!connected || !espDevice || !selectedRelease) { showSnack(t('noReleaseSelected')); return; }
     const asset = selectedRelease.assets.find(a => a.name.endsWith('.bin'));
     if (!asset) {
       showSnack(`⚠️ ${t('noBin')} ${selectedRelease.tag_name}`);
       log(`${t('noBin')} ${selectedRelease.tag_name}`, 'warn');
       return;
     }
-    log(`Flashing ${selectedRelease.tag_name} — ${asset.name}`, 'info');
-    setStatus(t('downloading'), asset.name, 'busy');
-    setProgress(true, true, 0, t('logDownloading'));
+
+    // Disable buttons during flash
+    document.getElementById('flashBtn').disabled = true;
+    document.getElementById('eraseBtn').disabled = true;
+    document.getElementById('connectBtn').disabled = true;
+
     try {
+      // 1. Download firmware
+      log(`${t('logDownloading')} ${selectedRelease.tag_name} — ${asset.name}`, 'info');
+      setStatus(t('downloading'), asset.name, 'busy');
+      setProgress(true, true, 0, t('logDownloading'));
+
       const res = await fetch(asset.browser_download_url);
-      if (!res.ok) throw new Error('Download failed: ' + res.status);
+      if (!res.ok) throw new Error('Download failed: HTTP ' + res.status);
       const fw = await res.arrayBuffer();
-      log(`Downloaded ${(fw.byteLength/1024).toFixed(1)} KB`, 'ok');
-      const steps = [
-        [10, t('logConnectBootloader')],
-        [25, t('logEnterFlashMode')],
-        [40, t('logEraseRegions')],
-        [55, t('logWriting')],
-        [70, t('logWriting')],
-        [85, t('logWriting')],
-        [95, t('logVerifying')],
-        [100, t('logDone')],
-      ];
-      setStatus(t('flashing'), selectedRelease.tag_name, 'busy');
-      for (const [pct, label] of steps) {
-        setProgress(true, false, pct, label);
-        log(label, 'info');
-        await sleep(650);
+      log(`Downloaded ${(fw.byteLength / 1024).toFixed(1)} KB`, 'ok');
+
+      // Convert ArrayBuffer to binary string for esptool-js
+      const fwArray = new Uint8Array(fw);
+      let binaryStr = '';
+      for (let i = 0; i < fwArray.length; i++) {
+        binaryStr += String.fromCharCode(fwArray[i]);
       }
+
+      // 2. Flash
+      setStatus(t('flashing'), selectedRelease.tag_name, 'busy');
+      log(t('logEraseRegions'), 'info');
+
+      const flashOptions = {
+        fileArray: [{ data: binaryStr, address: 0x0 }],
+        flashSize: 'keep',
+        flashMode: 'keep',
+        flashFreq: 'keep',
+        eraseAll: false,
+        compress: true,
+        reportProgress(fileIndex, written, total) {
+          const pct = Math.round((written / total) * 100);
+          setProgress(true, false, pct, `${t('logWriting')} ${pct}%`);
+        },
+        calculateMD5Hash(image) {
+          return CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString();
+        },
+      };
+
+      await espDevice.writeFlash(flashOptions);
+
+      // 3. Done
       setStatus(t('flashComplete'), `${selectedRelease.tag_name} — ${t('pressBootToStart')}`, 'connected');
       setProgress(true, false, 100, t('flashComplete'));
       log(t('logSkiddyReady'), 'ok');
       showSnack(t('snackFlashed'), 5000);
+
+      await espDevice.hardReset();
+
     } catch(e) {
       setStatus(t('flashFailed'), e.message, 'error');
       log('Error: ' + e.message, 'err');
       showSnack(`${t('flashFailed')}: ${e.message}`);
       setProgress(false);
+    } finally {
+      document.getElementById('flashBtn').disabled = false;
+      document.getElementById('eraseBtn').disabled = false;
+      document.getElementById('connectBtn').disabled = false;
     }
   }
 
   // ── ERASE ─────────────────────────────────────────
   async function handleErase() {
-    if (!connected) return;
-    setStatus(t('erasing'), t('fullEraseHint'), 'busy');
-    setProgress(true, true, 0, t('logErasing'));
-    log(t('logErasing'), 'warn');
-    await sleep(2500);
-    log(t('logErased'), 'ok');
-    setStatus(t('erased'), t('readyToFlash'), 'connected');
-    setProgress(false);
-    showSnack(t('snackErased'));
+    if (!connected || !espDevice) return;
+    document.getElementById('flashBtn').disabled = true;
+    document.getElementById('eraseBtn').disabled = true;
+    document.getElementById('connectBtn').disabled = true;
+    try {
+      setStatus(t('erasing'), t('fullEraseHint'), 'busy');
+      setProgress(true, true, 0, t('logErasing'));
+      log(t('logErasing'), 'warn');
+      await espDevice.eraseFlash();
+      log(t('logErased'), 'ok');
+      setStatus(t('erased'), t('readyToFlash'), 'connected');
+      setProgress(false);
+      showSnack(t('snackErased'));
+    } catch(e) {
+      log('Error: ' + e.message, 'err');
+      setProgress(false);
+    } finally {
+      document.getElementById('flashBtn').disabled = false;
+      document.getElementById('eraseBtn').disabled = false;
+      document.getElementById('connectBtn').disabled = false;
+    }
   }
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));

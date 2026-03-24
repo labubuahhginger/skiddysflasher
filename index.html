@@ -4,11 +4,11 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SkidBGone Flasher</title>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Mono&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Mono&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&display=swap" rel="stylesheet"/>
   <script src="https://unpkg.com/esptool-js@0.4.3/bundle.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
   <style>
-    /* ── MD3 LIGHT THEME ── */
+    /* ── LIGHT THEME ── */
     :root {
       --primary: #6750A4;
       --on-primary: #FFFFFF;
@@ -16,29 +16,21 @@
       --on-primary-container: #21005D;
       --secondary: #625B71;
       --secondary-container: #E8DEF8;
-      --on-secondary-container: #1D192B;
       --surface: #FEF7FF;
-      --on-surface: #1D1B20;
-      --surface-variant: #E7E0EC;
+      --on-surface: #1C1B1F;
       --on-surface-variant: #49454F;
       --outline: #79747E;
       --outline-variant: #CAC4D0;
       --error: #B3261E;
       --error-container: #F9DEDC;
       --on-error-container: #410E0B;
-      --surface-container-lowest: #FFFFFF;
-      --surface-container-low: #F7F2FA;
       --surface-container: #F3EDF7;
       --surface-container-high: #ECE6F0;
       --surface-container-highest: #E6E0E9;
-      --success: #146C2E;
-      --elevation-1: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 1px 3px 1px rgba(0,0,0,0.15);
-      --elevation-2: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
-      --hero-grad-start: #EADDFF;
-      --hero-grad-end: #FEF7FF;
+      --success: #386A20;
+      --hero-grad-mid: #F4EEFF;
     }
-    
-    /* ── MD3 DARK THEME ── */
+    /* ── DARK THEME ── */
     [data-theme="dark"] {
       --primary: #D0BCFF;
       --on-primary: #381E72;
@@ -46,31 +38,24 @@
       --on-primary-container: #EADDFF;
       --secondary: #CCC2DC;
       --secondary-container: #4A4458;
-      --on-secondary-container: #E8DEF8;
       --surface: #141218;
-      --on-surface: #E6E0E9;
-      --surface-variant: #49454F;
+      --on-surface: #E6E1E5;
       --on-surface-variant: #CAC4D0;
       --outline: #938F99;
       --outline-variant: #49454F;
       --error: #F2B8B5;
       --error-container: #8C1D18;
       --on-error-container: #F9DEDC;
-      --surface-container-lowest: #0F0D13;
-      --surface-container-low: #1D1B20;
       --surface-container: #211F26;
       --surface-container-high: #2B2930;
       --surface-container-highest: #36343B;
-      --success: #9CD67D;
-      --elevation-1: 0px 1px 3px 1px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.3);
-      --elevation-2: 0px 2px 6px 2px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.3);
-      --hero-grad-start: #2B2930;
-      --hero-grad-end: #141218;
+      --success: #B7F397;
+      --hero-grad-mid: #1E1A2E;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Google Sans', Roboto, sans-serif;
+      font-family: 'Google Sans', sans-serif;
       background: var(--surface); color: var(--on-surface);
       min-height: 100vh; transition: background .3s, color .3s;
     }
@@ -82,278 +67,335 @@
       white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased; user-select: none;
     }
 
-    /* APP BAR */
-    .top-app-bar {
+    /* NAVBAR */
+    .navbar {
       position: sticky; top: 0; z-index: 50;
-      background: var(--surface); color: var(--on-surface);
-      height: 64px; display: flex; align-items: center; padding: 0 16px; gap: 12px;
-      transition: background .3s; box-shadow: var(--elevation-1);
+      background: var(--surface); border-bottom: 1px solid var(--outline-variant);
+      height: 64px; display: flex; align-items: center; padding: 0 16px; gap: 8px;
+      transition: background .3s, border-color .3s;
     }
-    .app-bar-title { font-size: 22px; font-weight: 400; display: flex; align-items: center; gap: 12px; flex: 1; }
-    .app-bar-title .material-symbols-rounded { font-size: 28px; color: var(--primary); }
+    .navbar-logo { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .navbar-logo .material-symbols-rounded { font-size: 22px; color: var(--primary); }
+    .navbar-spacer { flex: 1; }
 
-    /* ICON BUTTON */
+    /* MD3 Icon Button */
     .icon-btn {
-      width: 48px; height: 48px; border-radius: 50%; border: none;
+      width: 40px; height: 40px; border-radius: 20px; border: none;
       background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      color: var(--on-surface-variant); transition: background .2s; outline: none; position: relative; overflow: hidden;
+      color: var(--on-surface-variant); transition: background .2s;
     }
-    .icon-btn::before { content: ''; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity .2s; }
-    .icon-btn:hover::before { opacity: 0.08; }
-    .icon-btn:active::before { opacity: 0.12; }
-    .icon-btn .material-symbols-rounded { font-size: 24px; }
+    .icon-btn:hover { background: rgba(103,80,164,.12); }
+    .icon-btn .material-symbols-rounded { font-size: 22px; }
 
-    /* SEGMENTED BUTTON */
-    .segmented-btn {
-      display: flex; border-radius: 100px; overflow: hidden;
-      border: 1px solid var(--outline); height: 40px;
+    /* Lang Segment */
+    .lang-seg {
+      display: flex; border-radius: 20px; overflow: hidden;
+      border: 1px solid var(--outline-variant); height: 36px;
     }
-    .seg-item {
-      padding: 0 16px; border: none; background: transparent;
-      font-family: 'Google Sans', sans-serif; font-size: 14px; font-weight: 500;
-      color: var(--on-surface); cursor: pointer; transition: background .2s;
-      position: relative; display: flex; align-items: center; justify-content: center;
+    .lang-btn {
+      padding: 0 14px; border: none; background: transparent;
+      font-family: 'Google Sans', sans-serif; font-size: 13px; font-weight: 500;
+      color: var(--on-surface-variant); cursor: pointer; transition: background .15s, color .15s;
     }
-    .seg-item:not(:last-child) { border-right: 1px solid var(--outline); }
-    .seg-item::before { content: ''; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity .2s; }
-    .seg-item:hover::before { opacity: 0.08; }
-    .seg-item.active { background: var(--secondary-container); color: var(--on-secondary-container); }
-    .seg-item.active::before { display: none; }
+    .lang-btn.active {
+      background: var(--secondary-container); color: var(--secondary);
+    }
+    .lang-btn:hover:not(.active) { background: var(--surface-container-high); }
+
+    .navbar-link {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 20px;
+      background: var(--surface-container); color: var(--on-surface-variant);
+      font-size: 13px; font-weight: 500; text-decoration: none; transition: background .2s;
+    }
+    .navbar-link:hover { background: var(--surface-container-high); }
+    .navbar-link .material-symbols-rounded { font-size: 16px; }
 
     /* HERO */
     .hero {
-      background: linear-gradient(180deg, var(--hero-grad-start) 0%, var(--hero-grad-end) 100%);
-      padding: 48px 20px 48px; display: flex; flex-direction: column;
-      align-items: center; gap: 24px; text-align: center;
-      border-bottom: 1px solid var(--outline-variant);
+      background: linear-gradient(160deg, var(--primary-container) 0%, var(--hero-grad-mid) 60%, var(--surface) 100%);
+      padding: 48px 20px 40px; display: flex; flex-direction: column;
+      align-items: center; gap: 20px; text-align: center;
+      transition: background .3s;
     }
     .skiddy-ascii {
-      font-family: 'Google Sans Mono', monospace; font-size: 16px; line-height: 1.5;
+      font-family: 'Google Sans Mono', monospace; font-size: 14px; line-height: 1.5;
       color: var(--primary); white-space: pre;
-      animation: float 4s ease-in-out infinite;
-      filter: drop-shadow(0 8px 16px rgba(103,80,164,.2));
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 4px 12px rgba(103,80,164,.3));
     }
-    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-    .hero-title { font-size: 32px; font-weight: 400; color: var(--on-surface); letter-spacing: -0.5px; margin-bottom: -10px; }
-    .hero-tagline { font-size: 16px; color: var(--on-surface-variant); max-width: 480px; line-height: 1.6; font-weight: 400; }
-    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-    
-    /* ASSIST CHIPS */
-    .chip {
-      display: flex; align-items: center; gap: 8px;
-      padding: 0 12px; height: 32px; border-radius: 8px; font-size: 14px; font-weight: 500;
-      background: var(--surface); color: var(--on-surface-variant); border: 1px solid var(--outline);
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .hero-ascii-title {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 8px; line-height: 1.25;
+      color: var(--on-primary-container); white-space: pre; opacity: .85;
+      letter-spacing: -0.3px; word-spacing: 0;
+      display: block; text-align: left;
     }
-    .chip .material-symbols-rounded { font-size: 18px; }
-    .chip.primary { background: var(--secondary-container); color: var(--on-secondary-container); border-color: transparent; }
+    .hero-tagline { font-size: 16px; color: var(--on-surface-variant); max-width: 400px; line-height: 1.6; }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .badge {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+      background: var(--surface); color: var(--on-surface-variant); border: 1px solid var(--outline-variant);
+    }
+    .badge .material-symbols-rounded { font-size: 14px; }
+    .badge.primary { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
 
-    /* MAIN CONTAINER */
-    .main-grid { max-width: 680px; margin: 0 auto; padding: 32px 16px 80px; display: flex; flex-direction: column; gap: 24px; }
+    /* MAIN */
+    .main { max-width: 640px; margin: 0 auto; padding: 24px 16px 80px; display: flex; flex-direction: column; gap: 16px; }
 
-    /* MD3 CARDS */
+    /* CARDS */
     .card {
-      background: var(--surface-container-low); border-radius: 16px; padding: 24px;
-      display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--outline-variant);
-      transition: background .3s, border-color .3s;
+      background: var(--surface-container); border-radius: 20px; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+      transition: background .3s;
     }
-    .card-title {
+    .card-header {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 500; color: var(--on-surface-variant);
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .card-header .material-symbols-rounded { font-size: 18px; }
+
+    /* STATUS */
+    .status-row {
       display: flex; align-items: center; gap: 12px;
-      font-size: 22px; font-weight: 400; color: var(--on-surface);
+      padding: 14px 16px; background: var(--surface-container-high); border-radius: 14px;
+      transition: background .3s;
     }
-    .card-title .material-symbols-rounded { font-size: 28px; color: var(--primary); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--outline); flex-shrink: 0; transition: background .3s; }
+    .dot.connected { background: var(--success); animation: pulse 2s infinite; }
+    .dot.error { background: var(--error); }
+    .dot.busy { background: var(--primary); animation: pulse .6s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .status-label { flex: 1; font-size: 14px; }
+    .status-sub { font-size: 12px; color: var(--on-surface-variant); margin-top: 2px; }
 
-    /* FILLED TEXT FIELD / SELECT */
-    .text-field {
-      position: relative; background: var(--surface-container-highest);
-      border-radius: 4px 4px 0 0; padding: 8px 16px; border-bottom: 1px solid var(--on-surface-variant);
-      display: flex; align-items: center; gap: 12px; transition: background .2s, border-color .2s;
-    }
-    .text-field:hover { background: rgba(28,27,31,0.05); }
-    .text-field:focus-within { border-bottom: 2px solid var(--primary); background: var(--surface-container-highest); padding-bottom: 7px; }
-    .text-field .material-symbols-rounded { color: var(--on-surface-variant); }
-    .text-field select {
-      flex: 1; border: none; background: transparent; padding: 8px 0;
-      font-family: inherit; font-size: 16px; color: var(--on-surface); outline: none; cursor: pointer; appearance: none;
-    }
-    .text-field .arrow-drop { position: absolute; right: 16px; pointer-events: none; color: var(--on-surface-variant); }
-
-    /* STATUS LIST ITEM */
-    .list-item {
-      display: flex; align-items: center; gap: 16px;
-      padding: 12px 16px; background: transparent; border-radius: 0;
-    }
-    .status-icon {
-      width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      background: var(--surface-container-high); color: var(--on-surface-variant); flex-shrink: 0; transition: all .3s;
-    }
-    .status-icon.connected { background: var(--success); color: var(--surface); }
-    .status-icon.error { background: var(--error); color: var(--surface); }
-    .status-icon.busy { background: var(--primary-container); color: var(--on-primary-container); animation: pulseBeat 1.5s infinite; }
-    @keyframes pulseBeat { 0% {transform: scale(1); box-shadow: 0 0 0 0 rgba(103,80,164,.4);} 70% {transform: scale(1.05); box-shadow: 0 0 0 10px rgba(103,80,164,0);} 100% {transform: scale(1); box-shadow: 0 0 0 0 rgba(103,80,164,0);} }
-    .list-item-content { flex: 1; display: flex; flex-direction: column; }
-    .list-item-headline { font-size: 16px; font-weight: 400; color: var(--on-surface); }
-    .list-item-supporting { font-size: 14px; color: var(--on-surface-variant); margin-top: 2px; }
-
-    /* LINEAR PROGRESS */
-    .progress-wrap { display: none; margin: 8px 0; }
+    /* PROGRESS */
+    .progress-wrap { display: none; }
     .progress-wrap.show { display: block; }
-    .progress-track { height: 4px; border-radius: 2px; background: var(--surface-container-highest); overflow: hidden; position: relative; }
-    .progress-fill { height: 100%; border-radius: 2px; background: var(--primary); width: 0%; transition: width .2s linear; }
-    .progress-fill.indeterminate { width: 50%; animation: ind 1.5s infinite linear; transform-origin: left; }
-    @keyframes ind { 0%{transform:translateX(-100%) scaleX(0.2)} 50%{transform:translateX(50%) scaleX(1)} 100%{transform:translateX(200%) scaleX(0.2)} }
-    .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--primary); margin-top: 8px; font-weight: 500; letter-spacing: 0.5px;}
+    .progress-track { height: 6px; border-radius: 3px; background: var(--surface-container-highest); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; background: var(--primary); width: 0%; transition: width .4s ease; }
+    .progress-fill.indeterminate { width: 35%; animation: ind 1.4s ease-in-out infinite; }
+    @keyframes ind { 0%{transform:translateX(-100%)} 100%{transform:translateX(390%)} }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--on-surface-variant); margin-top: 6px; }
 
     /* BUTTONS */
-    .btn-row { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; width: 100%; }
     .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      height: 40px; border-radius: 20px; font-family: 'Google Sans', sans-serif;
-      font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: background .2s, box-shadow .2s; outline: none; position: relative; overflow: hidden;
-      padding: 0 24px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      border: none; cursor: pointer; font-family: 'Google Sans', sans-serif;
+      font-weight: 500; transition: all .2s; width: 100%;
     }
-    .btn::before { content: ''; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity .2s; }
-    .btn:not(:disabled):hover::before { opacity: 0.08; }
-    .btn:not(:disabled):active::before { opacity: 0.12; }
-    .btn:disabled { opacity: 0.38; cursor: not-allowed; }
+    .btn:disabled { opacity: .38; cursor: not-allowed; pointer-events: none; }
+    .btn .material-symbols-rounded { font-size: 20px; }
+    .btn-filled { height: 56px; border-radius: 16px; font-size: 16px; background: var(--primary); color: var(--on-primary); }
+    .btn-filled:hover { box-shadow: 0 2px 8px rgba(103,80,164,.4); }
+    .btn-filled:active { transform: scale(.98); }
+    .btn-filled.alt { background: var(--primary-container); color: var(--on-primary-container); }
+    .btn-tonal { height: 48px; border-radius: 12px; font-size: 14px; background: var(--secondary-container); color: var(--secondary); }
+    .btn-tonal:hover { box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+    .btn-outlined {
+      height: 48px; border-radius: 12px; font-size: 14px;
+      background: transparent; border: 1px solid var(--outline);
+      color: var(--primary); text-decoration: none;
+    }
+    .btn-outlined:hover { background: rgba(103,80,164,.08); }
 
-    .btn.filled { background: var(--primary); color: var(--on-primary); }
-    .btn.filled:not(:disabled):hover { box-shadow: var(--elevation-1); }
-    .btn.tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
-    .btn.outlined { background: transparent; border: 1px solid var(--outline); color: var(--primary); text-decoration: none; padding: 0 23px; }
-    .btn.text { background: transparent; color: var(--primary); padding: 0 12px; }
+    /* VERSION SELECT */
+    .version-select-wrap {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: var(--surface-container-high); border-radius: 12px;
+    }
+    .version-select-wrap .material-symbols-rounded { font-size: 20px; color: var(--on-surface-variant); }
+    select {
+      flex: 1; border: none; background: transparent;
+      font-family: 'Google Sans', sans-serif; font-size: 14px;
+      color: var(--on-surface); outline: none; cursor: pointer;
+    }
 
-    /* LARGE CONNECT BUTTON (FAB-like Extended) */
-    .btn-large { height: 56px; border-radius: 16px; font-size: 16px; width: 100%; box-shadow: var(--elevation-1); }
-    .btn-large.filled { background: var(--primary-container); color: var(--on-primary-container); }
-    .btn-large .material-symbols-rounded { font-size: 24px; }
-
-    /* LOG TERMINAL */
+    /* LOG */
     .log {
-      display: none; font-family: 'Google Sans Mono', monospace; font-size: 13px; line-height: 1.6;
-      background: var(--surface-container-highest); color: var(--on-surface); border-radius: 12px; padding: 16px;
-      max-height: 200px; overflow-y: auto; border: 1px solid var(--outline-variant);
+      display: none; font-family: 'Google Sans Mono', monospace;
+      font-size: 12px; line-height: 1.7;
+      background: #1C1B1F; color: #E6E1E5;
+      border-radius: 14px; padding: 14px 16px;
+      max-height: 180px; overflow-y: auto;
     }
     .log.show { display: block; }
-    .log p { margin: 0; transition: color .2s; }
-    .log .ok { color: var(--success); font-weight: 700; }
-    .log .err { color: var(--error); font-weight: 700; }
-    .log .info { color: var(--primary); }
-    .log .warn { color: #A85A00; }
+    .log p { margin: 0; }
+    .log .ok { color: #B7F397; }
+    .log .err { color: #F2B8B5; }
+    .log .info { color: #D0BCFF; }
+    .log .warn { color: #FFD8A8; }
 
-    /* HISTORY LIST */
-    .changelog-list { display: flex; flex-direction: column; }
-    .release-item { padding: 16px 0; display: flex; gap: 16px; border-bottom: 1px solid var(--outline-variant); }
-    .release-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .release-badge {
-      background: var(--secondary-container); color: var(--on-secondary-container);
-      font-family: 'Google Sans Mono', monospace; font-size: 12px; font-weight: 700;
-      padding: 4px 8px; border-radius: 8px; height: fit-content; margin-top: 2px;
+    /* CHANGELOG */
+    .release-item { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; }
+    .release-item + .release-item { border-top: 1px solid var(--outline-variant); }
+    .release-ver {
+      background: var(--primary-container); color: var(--on-primary-container);
+      font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 8px;
+      white-space: nowrap; margin-top: 2px; font-family: 'Google Sans Mono', monospace;
     }
-    .release-details { flex: 1; }
-    .release-title { font-size: 16px; font-weight: 500; color: var(--on-surface); margin-bottom: 4px; }
-    .release-date { font-size: 12px; color: var(--on-surface-variant); margin-bottom: 8px; }
-    .release-notes { font-size: 14px; color: var(--on-surface-variant); line-height: 1.5; }
+    .release-info { flex: 1; }
+    .release-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+    .release-date { font-size: 12px; color: var(--on-surface-variant); margin-bottom: 5px; }
+    .release-notes { font-size: 13px; color: var(--on-surface-variant); line-height: 1.6; }
+    .release-loading { font-size: 13px; color: var(--on-surface-variant); display: flex; align-items: center; gap: 8px; }
 
-    /* DATA TABLE */
-    .md-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .md-table th { font-size: 14px; font-weight: 500; color: var(--on-surface-variant); border-bottom: 1px solid var(--outline-variant); padding: 16px 8px 12px; }
-    .md-table td { font-size: 14px; color: var(--on-surface); padding: 12px 8px; border-bottom: 1px solid var(--surface-variant); }
-    .md-table tr:last-child td { border-bottom: none; }
-    code { font-family: 'Google Sans Mono', monospace; background: var(--surface-container-highest); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: var(--on-surface); }
-
-    /* BROWSER WARNING */
-    .banner {
-      display: none; align-items: center; gap: 16px; padding: 16px; border-radius: 12px;
-      background: var(--error-container); color: var(--on-error-container); margin-bottom: 24px;
+    /* WIRING */
+    .wiring-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .wiring-table th {
+      text-align: left; padding: 8px 12px;
+      background: var(--surface-container-high);
+      color: var(--on-surface-variant); font-weight: 500; font-size: 12px;
     }
-    .banner.show { display: flex; }
-    .banner .material-symbols-rounded { font-size: 24px; }
+    .wiring-table th:first-child { border-radius: 8px 0 0 8px; }
+    .wiring-table th:last-child { border-radius: 0 8px 8px 0; }
+    .wiring-table td { padding: 10px 12px; border-bottom: 1px solid var(--outline-variant); }
+    .wiring-table tr:last-child td { border-bottom: none; }
+    code {
+      font-family: 'Google Sans Mono', monospace;
+      background: var(--surface-container-high);
+      padding: 2px 7px; border-radius: 6px; font-size: 13px;
+    }
+
+    /* BROWSER WARN */
+    .browser-warn {
+      display: none; align-items: center; gap: 10px;
+      padding: 14px 16px; border-radius: 14px;
+      background: var(--error-container); color: var(--on-error-container); font-size: 14px;
+    }
+    .browser-warn.show { display: flex; }
 
     /* SNACKBAR */
     .snackbar {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
-      background: var(--surface-variant); color: var(--surface); padding: 14px 16px; border-radius: 4px;
-      font-size: 14px; display: flex; align-items: center; gap: 16px; box-shadow: var(--elevation-2);
-      transition: transform .3s cubic-bezier(0.2, 0, 0, 1), opacity .3s; opacity: 0; z-index: 200; white-space: nowrap; font-weight: 400;
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #313033; color: #E6E1E5;
+      padding: 14px 20px; border-radius: 14px;
+      font-size: 14px; display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3);
+      transition: transform .3s cubic-bezier(.05,.7,.1,1);
+      z-index: 200; white-space: nowrap;
     }
-    .snackbar.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-    .snackbar-action { color: var(--primary); font-weight: 500; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1px; background: none; border:none; font-family: inherit; }
+    .snackbar.show { transform: translateX(-50%) translateY(0); }
+    .snackbar-btn { color: #D0BCFF; font-weight: 500; cursor: pointer; background: none; border: none; font-family: 'Google Sans', sans-serif; font-size: 14px; }
 
-    /* MODAL SCRIM & DIALOG */
-    .scrim {
-      display: none; position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.32);
-      align-items: center; justify-content: center; backdrop-filter: blur(2px);
+
+    /* MODAL */
+    .modal-scrim {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.5); align-items: flex-end; justify-content: center;
     }
-    .scrim.show { display: flex; animation: fadeIn .2s ease; }
-    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-    .dialog {
-      background: var(--surface-container-high); border-radius: 28px; width: 90%; max-width: 560px;
-      max-height: 85vh; display: flex; flex-direction: column; box-shadow: var(--elevation-2);
-      animation: dialogZoom .3s cubic-bezier(0.2, 0, 0, 1);
+    .modal-scrim.show { display: flex; animation: scrimIn .25s ease; }
+    @keyframes scrimIn { from{opacity:0} to{opacity:1} }
+    .modal {
+      background: var(--surface-container);
+      border-radius: 28px 28px 0 0;
+      width: 100%; max-width: 640px;
+      max-height: 85vh; display: flex; flex-direction: column;
+      animation: modalUp .3s cubic-bezier(.05,.7,.1,1);
+      transition: background .3s;
     }
-    @keyframes dialogZoom { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
-    .dialog-icon { display: flex; justify-content: center; padding-top: 24px; color: var(--secondary); }
-    .dialog-title { font-size: 24px; font-weight: 400; color: var(--on-surface); text-align: center; padding: 16px 24px 0; }
-    .dialog-content { padding: 16px 24px 24px; overflow-y: auto; flex: 1; font-size: 14px; color: var(--on-surface-variant); }
-    .dialog-actions { padding: 16px 24px 24px; display: flex; justify-content: flex-end; gap: 8px; }
+    @keyframes modalUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .modal-handle {
+      width: 32px; height: 4px; border-radius: 2px;
+      background: var(--outline-variant); margin: 12px auto 0; flex-shrink: 0;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 8px; flex-shrink: 0;
+    }
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-body { overflow-y: auto; padding: 8px 20px 32px; flex: 1; }
+    .modal-release { padding: 16px 0; border-bottom: 1px solid var(--outline-variant); }
+    .modal-release:last-child { border-bottom: none; }
+    .modal-release-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .modal-release-body {
+      font-size: 13px; color: var(--on-surface-variant); line-height: 1.7; white-space: pre-wrap;
+    }
+    .btn-text {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 40px; border: none; background: transparent;
+      color: var(--primary); font-family: 'Google Sans', sans-serif;
+      font-size: 14px; font-weight: 500; cursor: pointer; border-radius: 20px;
+      padding: 0 12px; transition: background .2s;
+    }
+    .btn-text:hover { background: rgba(103,80,164,.1); }
+    .btn-text .material-symbols-rounded { font-size: 18px; }
+
+    .footer { text-align: center; font-size: 12px; color: var(--on-surface-variant); opacity: .7; line-height: 1.8; }
+    .footer a { color: var(--primary); text-decoration: none; }
   </style>
 </head>
 <body>
 
-<header class="top-app-bar">
-  <div class="app-bar-title">
-    <span class="material-symbols-rounded" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<nav class="navbar">
+  <div class="navbar-logo">
+    <span class="material-symbols-rounded">bolt</span>
     SkidBGone Flasher
   </div>
-  
-  <div class="segmented-btn">
-    <button class="seg-item active" id="langEn" onclick="setLang('en')">EN</button>
-    <button class="seg-item" id="langRu" onclick="setLang('ru')">RU</button>
+  <div class="navbar-spacer"></div>
+
+  <!-- Language Segmented Button -->
+  <div class="lang-seg">
+    <button class="lang-btn active" id="langEn" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" id="langRu" onclick="setLang('ru')">RU</button>
   </div>
-  
-  <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">
+
+  <!-- Dark mode toggle -->
+  <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">
     <span class="material-symbols-rounded" id="themeIcon">dark_mode</span>
   </button>
-</header>
 
-<section class="hero">
+  <a class="navbar-link" href="https://github.com/labubuahhginger/SkidBGone" target="_blank">
+    <span class="material-symbols-rounded">code</span>
+    GitHub
+  </a>
+</nav>
+
+<div class="hero">
   <div class="skiddy-ascii">    ( o  o )
-     (  v  )  
-    /|     |\ 
+     (  v  )
+    /|     |\
     _|_____|_</div>
-  <div class="hero-title">SkidBGone Web Flasher</div>
+  <pre class="hero-ascii-title">   _____ __   _     ______  ______
+  / ___// /__(_)___/ / __ )/ ____/___  ____  ___
+  \__ \/ //_/ / __  / __  / / __/ __ \/ __ \/ _ \
+ ___/ / ,< / / /_/ / /_/ / /_/ / /_/ / / / /  __/
+/____/_/|_/_/\__,_/_____/\____/\____/_/ /_/\___/</pre>
   <div class="hero-tagline" data-i18n="tagline"></div>
-  <div class="chip-group">
-    <div class="chip primary"><span class="material-symbols-rounded">developer_board</span>ESP32-C3 SuperMini</div>
-    <div class="chip"><span class="material-symbols-rounded">wifi_tethering</span><span data-i18n="devices"></span></div>
-    <div class="chip"><span class="material-symbols-rounded">public</span>Chrome / Edge API</div>
+  <div class="hero-badges">
+    <div class="badge primary"><span class="material-symbols-rounded">developer_board</span>ESP32-C3 SuperMini</div>
+    <div class="badge"><span class="material-symbols-rounded">wifi_tethering</span><span data-i18n="devices"></span></div>
+    <div class="badge"><span class="material-symbols-rounded">public</span>Chrome / Edge</div>
   </div>
-</section>
+</div>
 
-<main class="main-grid">
-  
-  <div class="banner" id="browserWarn">
+<div class="main">
+
+  <div class="browser-warn" id="browserWarn">
     <span class="material-symbols-rounded">warning</span>
-    <div data-i18n="browserWarn"></div>
+    <span data-i18n="browserWarn"></span>
   </div>
 
   <!-- FLASH CARD -->
   <div class="card">
-    <div class="card-title"><span class="material-symbols-rounded">memory_alt</span><span data-i18n="flashFirmware"></span></div>
-    
-    <div class="text-field">
-      <span class="material-symbols-rounded">sell</span>
+    <div class="card-header"><span class="material-symbols-rounded">memory</span><span data-i18n="flashFirmware"></span></div>
+
+    <div class="version-select-wrap">
+      <span class="material-symbols-rounded">tag</span>
       <select id="versionSelect" onchange="onVersionChange()">
         <option value="" data-i18n="loadingReleases"></option>
       </select>
-      <span class="material-symbols-rounded arrow-drop">arrow_drop_down</span>
     </div>
 
-    <div class="list-item">
-      <div class="status-icon" id="dot"><span class="material-symbols-rounded" id="statusIconGlyph">usb</span></div>
-      <div class="list-item-content">
-        <div class="list-item-headline" id="statusText"></div>
-        <div class="list-item-supporting" id="statusSub"></div>
+    <div class="status-row">
+      <div class="dot" id="dot"></div>
+      <div>
+        <div class="status-label" id="statusText"></div>
+        <div class="status-sub" id="statusSub"></div>
       </div>
     </div>
 
@@ -362,190 +404,197 @@
       <div class="progress-meta"><span id="progressLabel"></span><span id="progressPct"></span></div>
     </div>
 
-    <div class="btn-row">
-      <button class="btn btn-large filled" id="connectBtn" onclick="handleConnect()">
-        <span class="material-symbols-rounded">cable</span><span id="connectBtnText">Connect Device</span>
-      </button>
-      <div style="display:flex;gap:12px;width:100%">
-        <button class="btn filled" id="flashBtn" disabled onclick="handleFlash()" style="flex:1">
-          <span class="material-symbols-rounded" style="font-variation-settings: 'FILL' 1;">flash_on</span><span id="flashBtnText" data-i18n="flashSkidBGone"></span>
-        </button>
-        <button class="btn tonal" id="eraseBtn" disabled onclick="handleErase()" style="flex:1">
-          <span class="material-symbols-rounded">delete_sweep</span><span data-i18n="eraseFlash"></span>
-        </button>
-      </div>
-    </div>
+    <button class="btn btn-filled" id="connectBtn" onclick="handleConnect()">
+      <span class="material-symbols-rounded">cable</span><span data-i18n="connectDevice"></span>
+    </button>
+    <button class="btn btn-filled alt" id="flashBtn" disabled onclick="handleFlash()">
+      <span class="material-symbols-rounded">flash_on</span><span data-i18n="flashSkidBGone"></span>
+    </button>
+    <button class="btn btn-tonal" id="eraseBtn" disabled onclick="handleErase()">
+      <span class="material-symbols-rounded">delete_sweep</span><span data-i18n="eraseFlash"></span>
+    </button>
   </div>
 
   <div class="log" id="log"></div>
 
   <!-- WIRING -->
   <div class="card">
-    <div class="card-title"><span class="material-symbols-rounded">hub</span><span data-i18n="wiring"></span></div>
-    <div style="font-size:14px; color:var(--on-surface-variant); margin-bottom: 8px;" data-i18n="wiringNote"></div>
-    <table class="md-table">
-      <thead><tr><th style="padding-left:4px">IR Transmitter</th><th>ESP32-C3 SuperMini</th></tr></thead>
+    <div class="card-header"><span class="material-symbols-rounded">cable</span><span data-i18n="wiring"></span></div>
+    <table class="wiring-table">
+      <thead><tr><th>IR Transmitter</th><th>ESP32-C3 SuperMini</th></tr></thead>
       <tbody>
-        <tr><td style="padding-left:4px">VCC</td><td><code>3.3V / 5V</code></td></tr>
-        <tr><td style="padding-left:4px">GND</td><td><code>GND</code></td></tr>
-        <tr><td style="padding-left:4px">DAT / SIG</td><td><code>GPIO3</code></td></tr>
+        <tr><td>VCC</td><td><code>3.3V</code></td></tr>
+        <tr><td>GND</td><td><code>GND</code></td></tr>
+        <tr><td>DAT / SIG</td><td><code>GPIO3</code></td></tr>
       </tbody>
     </table>
+    <div style="font-size:13px;color:var(--on-surface-variant);display:flex;gap:8px;align-items:flex-start;">
+      <span class="material-symbols-rounded" style="font-size:16px;color:var(--primary);margin-top:1px">info</span>
+      <span data-i18n="wiringNote"></span>
+    </div>
   </div>
 
   <!-- CHANGELOG -->
   <div class="card">
-    <div class="card-title"><span class="material-symbols-rounded">history</span><span data-i18n="changelog"></span></div>
-    <div class="changelog-list" id="changelog">
-      <div style="display:flex;align-items:center;gap:8px;color:var(--on-surface-variant);font-size:14px;">
-        <span class="material-symbols-rounded">sync</span> <span data-i18n="loadingReleases"></span>
+    <div class="card-header"><span class="material-symbols-rounded">history</span><span data-i18n="changelog"></span></div>
+    <div id="changelog">
+      <div class="release-loading">
+        <span class="material-symbols-rounded" style="font-size:16px">sync</span>
+        <span data-i18n="loadingReleases"></span>
       </div>
     </div>
-    <div style="display:flex; justify-content:flex-end; margin-top: 8px;">
-      <button class="btn text" onclick="openModal()">
-        <span data-i18n="viewAll"></span>
-      </button>
-    </div>
+    <button class="btn-text" onclick="openModal()">
+      <span class="material-symbols-rounded">open_in_full</span>
+      <span data-i18n="viewAll"></span>
+    </button>
   </div>
 
   <!-- LINKS -->
-  <div class="card" style="align-items: center; text-align: center; gap: 16px;">
-    <div class="card-title" style="justify-content: center;"><span class="material-symbols-rounded">language</span><span data-i18n="links"></span></div>
-    <div style="display:flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-      <a class="btn outlined" href="https://github.com/labubuahhginger/SkidBGone" target="_blank">
-        <span class="material-symbols-rounded">code</span> Firmware Repo
-      </a>
-      <a class="btn outlined" href="https://github.com/labubuahhginger/skiddysflasher" target="_blank">
-        <span class="material-symbols-rounded">open_in_browser</span> Flasher Repo
-      </a>
-    </div>
+  <div class="card">
+    <div class="card-header"><span class="material-symbols-rounded">link</span><span data-i18n="links"></span></div>
+    <a class="btn btn-outlined" href="https://github.com/labubuahhginger/SkidBGone" target="_blank">
+      <span class="material-symbols-rounded">code</span><span data-i18n="skidbgoneRepo"></span>
+    </a>
+    <a class="btn btn-outlined" href="https://github.com/labubuahhginger/skiddysflasher" target="_blank">
+      <span class="material-symbols-rounded">flash_on</span><span data-i18n="flasherRepo"></span>
+    </a>
   </div>
 
-</main>
+  <div class="footer">
+    SkidBGone — MIT License<br>
+    Made with 💀 by <a href="https://github.com/labubuahhginger" target="_blank">labubuahhginger</a><br>
+    Skiddy was here.
+  </div>
+</div>
 
-<!-- DIALOG FOR CHANGELOG -->
-<div class="scrim" id="modalScrim" onclick="closeModalOutside(event)">
-  <div class="dialog" id="modal">
-    <div class="dialog-icon"><span class="material-symbols-rounded" style="font-size:32px">update</span></div>
-    <div class="dialog-title" data-i18n="changelog"></div>
-    <div class="dialog-content" id="modalBody"></div>
-    <div class="dialog-actions">
-      <button class="btn text" onclick="closeModal()" data-i18n="close">Close</button>
+<!-- CHANGELOG MODAL -->
+<div class="modal-scrim" id="modalScrim" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" data-i18n="changelog"></span>
+      <button class="icon-btn" onclick="closeModal()">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody">
     </div>
   </div>
 </div>
 
 <div class="snackbar" id="snackbar">
   <span id="snackText"></span>
-  <button class="snackbar-action" onclick="hideSnack()">OK</button>
+  <button class="snackbar-btn" onclick="hideSnack()">OK</button>
 </div>
 
 <script>
   // ── I18N ──────────────────────────────────────────
   const i18n = {
     en: {
-      tagline: "Flash your ESP32-C3 SuperMini right in the browser. Skiddy can't wait to turn off everything.",
-      devices: "100+ devices",
-      browserWarn: "Web Serial API not supported. Please use Chrome or Edge browser.",
+      tagline: "Skiddy can't wait to turn off everything.\nFlash your ESP32-C3 SuperMini right in the browser.",
+      devices: "30+ devices",
+      browserWarn: "Web Serial API not supported. Please use Chrome or Edge.",
       flashFirmware: "Flash Firmware",
-      loadingReleases: "Fetching latest tags...",
-      noReleases: "No releases found",
+      loadingReleases: "Loading releases...",
+      noReleases: "No releases yet",
       connectDevice: "Connect Device",
       disconnect: "Disconnect",
       flashSkidBGone: "Flash SkidBGone",
       eraseFlash: "Erase Flash",
-      wiring: "Hardware Wiring",
-      wiringNote: "Ensure your IR transmitter is connected to GPIO3. Press the physical BOOT button on the ESP32 after flashing to unleash Skiddy.",
-      changelog: "Changelog & Updates",
-      links: "Source Code",
-      viewAll: "View full history",
-      notConnected: "Device not connected",
-      connectHint: "Plug in your ESP32-C3 via USB data cable",
-      connected: "Successfully Connected",
-      deviceReady: "Ready to flash",
-      downloading: "Fetching binary...",
-      flashing: "Writing to flash...",
-      flashComplete: "Flash successful!",
-      pressBootToStart: "Press BOOT button to start",
-      flashFailed: "Flashing failed",
-      erasing: "Erasing sectors...",
-      fullEraseHint: "Clearing entire flash memory",
-      erased: "Memory wiped",
-      readyToFlash: "ESP32 is ready",
-      connFailed: "Connection issue",
-      noBin: "Missing .bin in release",
-      noReleaseSelected: "Please select a version",
-      close: "Close",
+      wiring: "Wiring",
+      wiringNote: "Press BOOT button after flashing to start Skiddy.",
+      changelog: "Changelog",
+      links: "Links",
+      viewAll: "View full changelog",
+      skidbgoneRepo: "SkidBGone on GitHub",
+      flasherRepo: "Flasher on GitHub",
+      notConnected: "Not connected",
+      connectHint: "Connect your ESP32-C3 SuperMini via USB",
+      connected: "Connected",
+      deviceReady: "ESP32-C3 SuperMini ready",
+      downloading: "Downloading...",
+      flashing: "Flashing...",
+      flashComplete: "Flash complete!",
+      pressBootToStart: "Press BOOT to start",
+      flashFailed: "Flash failed",
+      erasing: "Erasing...",
+      fullEraseHint: "Full flash erase",
+      erased: "Erased",
+      readyToFlash: "Ready to flash",
+      connFailed: "Connection failed",
+      noBin: "No .bin found in release",
+      noReleaseSelected: "No release selected",
       // log messages
-      logConnected: "Device serial connected",
-      logDisconnected: "Port closed",
-      logErasing: "Initiating flash erase sequence...",
-      logErased: "Flash memory cleared successfully",
-      logSkiddyReady: "Firmware installed! Press physical BOOT button to run.",
-      logConnectBootloader: "Initializing bootloader connection...",
-      logEnterFlashMode: "Entering serial flash mode...",
-      logEraseRegions: "Erasing targeted flash regions...",
-      logWriting: "Writing blocks to ESP32...",
-      logVerifying: "Verifying data integrity...",
-      logDone: "Operation complete",
-      logDownloading: "Downloading release binary from GitHub...",
+      logConnected: "Device connected",
+      logDisconnected: "Disconnected",
+      logErasing: "Erasing full flash...",
+      logErased: "Flash erased",
+      logSkiddyReady: "Skiddy is ready. Press BOOT button!",
+      logConnectBootloader: "Connecting to bootloader...",
+      logEnterFlashMode: "Entering flash mode...",
+      logEraseRegions: "Erasing flash regions...",
+      logWriting: "Writing firmware...",
+      logVerifying: "Verifying...",
+      logDone: "Done!",
+      logDownloading: "Downloading firmware...",
       // snackbar
-      snackConnected: "Device identified and connected",
-      snackFlashed: "SkidBGone flashed successfully!",
-      snackConnFailed: "Failed to open serial port",
-      snackErased: "Flash erased to factory reset",
-      noReleasesLoaded: "Failed to connect to GitHub API",
+      snackConnected: "🎉 Skiddy found your device!",
+      snackFlashed: "✅ SkidBGone flashed! Skiddy is unleashed.",
+      snackConnFailed: "Connection failed",
+      snackErased: "🗑️ Flash erased",
+      noReleasesLoaded: "Could not load releases",
     },
     ru: {
-      tagline: "Прошей свой ESP32-C3 SuperMini прямо в браузере. Скидди не терпится всё выключить.",
-      devices: "100+ устройств",
-      browserWarn: "Web Serial API не поддерживается. Пожалуйста, используй Chrome или Edge.",
-      flashFirmware: "Установка прошивки",
-      loadingReleases: "Получение версий...",
-      noReleases: "Релизы не найдены",
+      tagline: "Скидди не может дождаться, чтобы всё выключить.\nПрошей свой ESP32-C3 SuperMini прямо в браузере.",
+      devices: "30+ устройств",
+      browserWarn: "Web Serial API не поддерживается. Используй Chrome или Edge.",
+      flashFirmware: "Прошивка",
+      loadingReleases: "Загрузка релизов...",
+      noReleases: "Релизов ещё нет",
       connectDevice: "Подключить устройство",
-      disconnect: "Отключиться",
+      disconnect: "Отключить",
       flashSkidBGone: "Прошить SkidBGone",
-      eraseFlash: "Очистить память",
-      wiring: "Подключение железа",
-      wiringNote: "Убедись, что IR передатчик подключен к GPIO3. После прошивки нажми кнопку BOOT на ESP32, чтобы выпустить Скидди.",
-      changelog: "История обновлений",
-      links: "Исходный код",
-      viewAll: "Показать всю историю",
-      notConnected: "Устройство не подключено",
-      connectHint: "Подключи ESP32-C3 по USB",
-      connected: "Успешно подключено",
-      deviceReady: "Готово к прошивке",
-      downloading: "Скачивание файла...",
-      flashing: "Запись памяти...",
-      flashComplete: "Успешно прошито!",
-      pressBootToStart: "Нажми BOOT для старта",
-      flashFailed: "Ошибка при прошивке",
-      erasing: "Очистка секторов...",
-      fullEraseHint: "Полное стирание флеш-памяти",
-      erased: "Память очищена",
-      readyToFlash: "ESP32 готов",
-      connFailed: "Сбой подключения",
-      noBin: "Отсутствует .bin файл",
-      noReleaseSelected: "Выберите версию",
-      close: "Закрыть",
-      logConnected: "Подключение установлено",
-      logDisconnected: "Порт закрыт",
-      logErasing: "Запуск процедуры очистки...",
-      logErased: "Память успешно стёрта",
-      logSkiddyReady: "Прошивка установлена! Нажми BOOT для запуска.",
+      eraseFlash: "Стереть флеш",
+      wiring: "Подключение",
+      wiringNote: "После прошивки нажми кнопку BOOT, чтобы запустить Скидди.",
+      changelog: "Изменения",
+      links: "Ссылки",
+      viewAll: "Полный список изменений",
+      skidbgoneRepo: "SkidBGone на GitHub",
+      flasherRepo: "Флашер на GitHub",
+      notConnected: "Не подключено",
+      connectHint: "Подключи ESP32-C3 SuperMini через USB",
+      connected: "Подключено",
+      deviceReady: "ESP32-C3 SuperMini готов",
+      downloading: "Загрузка...",
+      flashing: "Прошивка...",
+      flashComplete: "Прошивка завершена!",
+      pressBootToStart: "Нажми BOOT для запуска",
+      flashFailed: "Ошибка прошивки",
+      erasing: "Стирание...",
+      fullEraseHint: "Полное стирание флеша",
+      erased: "Стёрто",
+      readyToFlash: "Готово к прошивке",
+      connFailed: "Ошибка подключения",
+      noBin: "Нет .bin файла в релизе",
+      noReleaseSelected: "Релиз не выбран",
+      logConnected: "Устройство подключено",
+      logDisconnected: "Отключено",
+      logErasing: "Стирание флеша...",
+      logErased: "Флеш стёрт",
+      logSkiddyReady: "Скидди готов. Нажми BOOT!",
       logConnectBootloader: "Подключение к загрузчику...",
-      logEnterFlashMode: "Переход в режим прошивки...",
-      logEraseRegions: "Удаление старых данных...",
-      logWriting: "Запись блоков в ESP32...",
-      logVerifying: "Проверка целостности...",
-      logDone: "Операция завершена",
-      logDownloading: "Скачивание бинарника с GitHub...",
-      snackConnected: "Контроллер найден и подключен",
-      snackFlashed: "SkidBGone успешно прошит!",
-      snackConnFailed: "Не удалось открыть COM-порт",
-      snackErased: "Флеш-память стёрта до заводских настроек",
-      noReleasesLoaded: "Не удалось получить доступ к GitHub API",
+      logEnterFlashMode: "Вход в режим прошивки...",
+      logEraseRegions: "Стирание областей флеша...",
+      logWriting: "Запись прошивки...",
+      logVerifying: "Проверка...",
+      logDone: "Готово!",
+      logDownloading: "Загрузка прошивки...",
+      snackConnected: "🎉 Скидди нашёл твоё устройство!",
+      snackFlashed: "✅ SkidBGone прошит! Скидди выпущен.",
+      snackConnFailed: "Ошибка подключения",
+      snackErased: "🗑️ Флеш стёрт",
+      noReleasesLoaded: "Не удалось загрузить релизы",
     }
   };
 
@@ -562,17 +611,21 @@
     });
     document.getElementById('langEn').classList.toggle('active', lang === 'en');
     document.getElementById('langRu').classList.toggle('active', lang === 'ru');
+    // Update dynamic status
     if (!connected) {
-      setStatus(t('notConnected'), t('connectHint'), '', 'usb_off');
-      document.getElementById('connectBtnText').textContent = t('connectDevice');
-    } else {
-       document.getElementById('connectBtnText').textContent = t('disconnect');
+      setStatus(t('notConnected'), t('connectHint'), '');
+    }
+    // Update connect btn
+    if (!connected) {
+      document.getElementById('connectBtn').innerHTML =
+        `<span class="material-symbols-rounded">cable</span>${t('connectDevice')}`;
     }
   }
 
   function setLang(l) {
-    lang = l; localStorage.setItem('skidbgone-lang', l);
-    applyLang(); renderChangelog(releases);
+    lang = l;
+    localStorage.setItem('skidbgone-lang', l);
+    applyLang();
   }
 
   // ── THEME ─────────────────────────────────────────
@@ -582,7 +635,9 @@
   }
 
   function toggleTheme() {
-    darkMode = !darkMode; localStorage.setItem('skidbgone-dark', darkMode); applyTheme();
+    darkMode = !darkMode;
+    localStorage.setItem('skidbgone-dark', darkMode);
+    applyTheme();
   }
 
   // ── STATE ─────────────────────────────────────────
@@ -590,12 +645,13 @@
   let port = null, connected = false, releases = [], selectedRelease = null;
 
   window.addEventListener('load', async () => {
-    applyTheme(); applyLang();
+    applyTheme();
+    applyLang();
     if (!('serial' in navigator)) {
       document.getElementById('browserWarn').classList.add('show');
       document.getElementById('connectBtn').disabled = true;
     }
-    setStatus(t('notConnected'), t('connectHint'), '', 'usb_off');
+    setStatus(t('notConnected'), t('connectHint'), '');
     await loadReleases();
   });
 
@@ -608,14 +664,18 @@
       const sel = document.getElementById('versionSelect');
       if (!releases.length) {
         sel.innerHTML = `<option value="">${t('noReleases')}</option>`;
-        renderChangelog([]); return;
+        renderChangelog([]);
+        return;
       }
-      sel.innerHTML = releases.map((r,i) => `<option value="${i}">${r.tag_name}${r.name ? ' — ' + r.name : ''}</option>`).join('');
+      sel.innerHTML = releases.map((r,i) =>
+        `<option value="${i}">${r.tag_name}${r.name ? ' — ' + r.name : ''}</option>`
+      ).join('');
       selectedRelease = releases[0];
       renderChangelog(releases);
     } catch(e) {
       document.getElementById('versionSelect').innerHTML = `<option>${t('noReleasesLoaded')}</option>`;
-      document.getElementById('changelog').innerHTML = `<div style="padding:16px;color:var(--error);font-size:14px">${t('noReleasesLoaded')}: ${e.message}</div>`;
+      document.getElementById('changelog').innerHTML =
+        `<div class="release-loading"><span class="material-symbols-rounded" style="font-size:16px;color:var(--error)">error</span>${t('noReleasesLoaded')}: ${e.message}</div>`;
     }
   }
 
@@ -626,14 +686,14 @@
 
   function renderChangelog(list) {
     const el = document.getElementById('changelog');
-    if (!list.length) return;
-    const locale = lang === 'ru' ? 'ru-RU' : 'en-US';
-    el.innerHTML = list.slice(0,3).map(r => {
+    if (!list.length) { el.innerHTML = `<div class="release-loading">${t('noReleases')}</div>`; return; }
+    const locale = lang === 'ru' ? 'ru-RU' : 'en-GB';
+    el.innerHTML = list.slice(0,5).map(r => {
       const date = new Date(r.published_at).toLocaleDateString(locale, {day:'numeric',month:'short',year:'numeric'});
-      const body = r.body ? r.body.replace(/#{1,3} /g,'').substring(0,250) + (r.body.length>250?'…':'') : '—';
+      const body = r.body ? r.body.replace(/#{1,3} /g,'').substring(0,220) + (r.body.length>220?'…':'') : '—';
       return `<div class="release-item">
-        <div class="release-badge">${r.tag_name}</div>
-        <div class="release-details">
+        <div class="release-ver">${r.tag_name}</div>
+        <div class="release-info">
           <div class="release-title">${r.name || r.tag_name}</div>
           <div class="release-date">${date}</div>
           <div class="release-notes">${body}</div>
@@ -644,7 +704,7 @@
 
   // ── SNACKBAR ──────────────────────────────────────
   let snackT;
-  function showSnack(msg, ms=4000) {
+  function showSnack(msg, ms=3500) {
     document.getElementById('snackText').textContent = msg;
     const sb = document.getElementById('snackbar');
     sb.classList.add('show');
@@ -657,16 +717,16 @@
   function log(msg, cls='') {
     const el = document.getElementById('log');
     el.classList.add('show');
-    const p = document.createElement('p'); p.className = cls; p.textContent = '> ' + msg;
+    const p = document.createElement('p');
+    p.className = cls; p.textContent = '> ' + msg;
     el.appendChild(p); el.scrollTop = el.scrollHeight;
   }
 
   // ── STATUS ────────────────────────────────────────
-  function setStatus(text, sub, state, icon='usb') {
+  function setStatus(text, sub, state) {
     document.getElementById('statusText').textContent = text;
     document.getElementById('statusSub').textContent = sub || '';
-    document.getElementById('dot').className = 'status-icon ' + (state||'');
-    document.getElementById('statusIconGlyph').textContent = icon;
+    document.getElementById('dot').className = 'dot ' + (state||'');
   }
 
   // ── PROGRESS ──────────────────────────────────────
@@ -682,20 +742,28 @@
   }
 
   // ── ESPTOOL STATE ─────────────────────────────────
-  let espDevice = null; let transport = null;
+  let espDevice = null;
+  let transport = null;
 
+  // ── CONNECT ───────────────────────────────────────
   async function handleConnect() {
     if (connected) { await doDisconnect(); return; }
     try {
       port = await navigator.serial.requestPort();
       transport = new ESPLoader.Transport(port, true);
+
       const loaderOpts = {
-        transport, baudrate: 115200,
-        terminal: { clean(){}, writeLine(data){log(data,'info');}, write(data){if(data.trim()) log(data.trim(),'info');} },
+        transport,
+        baudrate: 115200,
+        terminal: {
+          clean() {},
+          writeLine(data) { log(data, 'info'); },
+          write(data) { if (data.trim()) log(data.trim(), 'info'); }
+        },
         enableTracing: false,
       };
 
-      setStatus(t('logConnectBootloader'), '', 'busy', 'sync');
+      setStatus(t('logConnectBootloader'), '', 'busy');
       setProgress(true, true, 0, t('logConnectBootloader'));
       log(t('logConnectBootloader'), 'info');
 
@@ -703,16 +771,21 @@
       await espDevice.main();
 
       const chip = espDevice.chip.CHIP_NAME;
-      connected = true; setProgress(false);
-      setStatus(t('connected'), `${chip} — ${t('deviceReady')}`, 'connected', 'check_circle');
-      document.getElementById('connectBtnText').textContent = t('disconnect');
+      connected = true;
+      setProgress(false);
+      setStatus(t('connected'), `${chip} — ${t('deviceReady')}`, 'connected');
+      document.getElementById('connectBtn').innerHTML =
+        `<span class="material-symbols-rounded">cable</span>${t('disconnect')}`;
       document.getElementById('flashBtn').disabled = false;
       document.getElementById('eraseBtn').disabled = false;
-      log(`${t('logConnected')} — ${chip}`, 'ok'); showSnack(t('snackConnected'));
+      log(`${t('logConnected')} — ${chip}`, 'ok');
+      showSnack(t('snackConnected'));
     } catch(e) {
       if (e.name !== 'NotFoundError') {
-        setStatus(t('connFailed'), e.message, 'error', 'error');
-        log('Error: ' + e.message, 'err'); showSnack(t('snackConnFailed')); setProgress(false);
+        setStatus(t('connFailed'), e.message, 'error');
+        log('Error: ' + e.message, 'err');
+        showSnack(t('snackConnFailed'));
+        setProgress(false);
         try { if (transport) await transport.disconnect(); } catch {}
         port = null; transport = null; espDevice = null;
       }
@@ -723,96 +796,158 @@
     try { if (transport) await transport.disconnect(); } catch {}
     try { if (port) await port.close(); } catch {}
     port = null; transport = null; espDevice = null; connected = false;
-    setStatus(t('notConnected'), t('connectHint'), '', 'usb_off');
-    document.getElementById('connectBtnText').textContent = t('connectDevice');
+    setStatus(t('notConnected'), t('connectHint'), '');
+    document.getElementById('connectBtn').innerHTML =
+      `<span class="material-symbols-rounded">cable</span>${t('connectDevice')}`;
     document.getElementById('flashBtn').disabled = true;
     document.getElementById('eraseBtn').disabled = true;
-    setProgress(false); log(t('logDisconnected'), 'warn');
+    setProgress(false);
+    log(t('logDisconnected'), 'info');
   }
 
+  // ── FLASH ─────────────────────────────────────────
   async function handleFlash() {
-    if (!connected || !espDevice || !selectedRelease) return;
+    if (!connected || !espDevice || !selectedRelease) { showSnack(t('noReleaseSelected')); return; }
     const asset = selectedRelease.assets.find(a => a.name.endsWith('.bin'));
-    if (!asset) { showSnack(`⚠️ ${t('noBin')}`); log(t('noBin'), 'warn'); return; }
+    if (!asset) {
+      showSnack(`⚠️ ${t('noBin')} ${selectedRelease.tag_name}`);
+      log(`${t('noBin')} ${selectedRelease.tag_name}`, 'warn');
+      return;
+    }
 
-    document.getElementById('flashBtn').disabled = true; document.getElementById('eraseBtn').disabled = true; document.getElementById('connectBtn').disabled = true;
+    // Disable buttons during flash
+    document.getElementById('flashBtn').disabled = true;
+    document.getElementById('eraseBtn').disabled = true;
+    document.getElementById('connectBtn').disabled = true;
+
     try {
-      log(`${t('logDownloading')} ${asset.name}`, 'info');
-      setStatus(t('downloading'), asset.name, 'busy', 'cloud_download');
+      // 1. Download firmware
+      log(`${t('logDownloading')} ${selectedRelease.tag_name} — ${asset.name}`, 'info');
+      setStatus(t('downloading'), asset.name, 'busy');
       setProgress(true, true, 0, t('logDownloading'));
 
       const res = await fetch(asset.browser_download_url);
-      if (!res.ok) throw new Error('Download failed');
+      if (!res.ok) throw new Error('Download failed: HTTP ' + res.status);
       const fw = await res.arrayBuffer();
-      log(`Downloaded ${(fw.byteLength/1024).toFixed(1)} KB`, 'ok');
+      log(`Downloaded ${(fw.byteLength / 1024).toFixed(1)} KB`, 'ok');
 
-      let binaryStr = ''; const fwArray = new Uint8Array(fw);
-      for (let i=0; i<fwArray.length; i++) binaryStr += String.fromCharCode(fwArray[i]);
+      // Convert ArrayBuffer to binary string for esptool-js
+      const fwArray = new Uint8Array(fw);
+      let binaryStr = '';
+      for (let i = 0; i < fwArray.length; i++) {
+        binaryStr += String.fromCharCode(fwArray[i]);
+      }
 
-      setStatus(t('flashing'), selectedRelease.tag_name, 'busy', 'system_update_alt');
+      // 2. Flash
+      setStatus(t('flashing'), selectedRelease.tag_name, 'busy');
       log(t('logEraseRegions'), 'info');
 
-      await espDevice.writeFlash({
+      const flashOptions = {
         fileArray: [{ data: binaryStr, address: 0x0 }],
-        flashSize: 'keep', flashMode: 'keep', flashFreq: 'keep', eraseAll: false, compress: true,
-        reportProgress(f, written, total) {
-          const pct = Math.round((written/total)*100);
+        flashSize: 'keep',
+        flashMode: 'keep',
+        flashFreq: 'keep',
+        eraseAll: false,
+        compress: true,
+        reportProgress(fileIndex, written, total) {
+          const pct = Math.round((written / total) * 100);
           setProgress(true, false, pct, `${t('logWriting')} ${pct}%`);
         },
-        calculateMD5Hash: img => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(img)).toString(),
-      });
+        calculateMD5Hash(image) {
+          return CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString();
+        },
+      };
 
-      setStatus(t('flashComplete'), `${selectedRelease.tag_name} — ${t('pressBootToStart')}`, 'connected', 'task_alt');
-      setProgress(true, false, 100, t('flashComplete')); log(t('logSkiddyReady'), 'ok'); showSnack(t('snackFlashed'), 5000);
+      await espDevice.writeFlash(flashOptions);
+
+      // 3. Done
+      setStatus(t('flashComplete'), `${selectedRelease.tag_name} — ${t('pressBootToStart')}`, 'connected');
+      setProgress(true, false, 100, t('flashComplete'));
+      log(t('logSkiddyReady'), 'ok');
+      showSnack(t('snackFlashed'), 5000);
+
       await espDevice.hardReset();
+
     } catch(e) {
-      setStatus(t('flashFailed'), e.message, 'error', 'warning'); log('Error: ' + e.message, 'err'); showSnack(t('flashFailed')); setProgress(false);
+      setStatus(t('flashFailed'), e.message, 'error');
+      log('Error: ' + e.message, 'err');
+      showSnack(`${t('flashFailed')}: ${e.message}`);
+      setProgress(false);
     } finally {
-      document.getElementById('flashBtn').disabled = false; document.getElementById('eraseBtn').disabled = false; document.getElementById('connectBtn').disabled = false;
+      document.getElementById('flashBtn').disabled = false;
+      document.getElementById('eraseBtn').disabled = false;
+      document.getElementById('connectBtn').disabled = false;
     }
   }
 
+  // ── ERASE ─────────────────────────────────────────
   async function handleErase() {
     if (!connected || !espDevice) return;
-    document.getElementById('flashBtn').disabled = true; document.getElementById('eraseBtn').disabled = true; document.getElementById('connectBtn').disabled = true;
+    document.getElementById('flashBtn').disabled = true;
+    document.getElementById('eraseBtn').disabled = true;
+    document.getElementById('connectBtn').disabled = true;
     try {
-      setStatus(t('erasing'), t('fullEraseHint'), 'busy', 'delete');
-      setProgress(true, true, 0, t('logErasing')); log(t('logErasing'), 'warn');
+      setStatus(t('erasing'), t('fullEraseHint'), 'busy');
+      setProgress(true, true, 0, t('logErasing'));
+      log(t('logErasing'), 'warn');
       await espDevice.eraseFlash();
-      log(t('logErased'), 'ok'); setStatus(t('erased'), t('readyToFlash'), 'connected', 'check_circle'); setProgress(false); showSnack(t('snackErased'));
+      log(t('logErased'), 'ok');
+      setStatus(t('erased'), t('readyToFlash'), 'connected');
+      setProgress(false);
+      showSnack(t('snackErased'));
     } catch(e) {
-      log('Error: ' + e.message, 'err'); setProgress(false); setStatus('Error', '', 'error', 'warning');
+      log('Error: ' + e.message, 'err');
+      setProgress(false);
     } finally {
-      document.getElementById('flashBtn').disabled = false; document.getElementById('eraseBtn').disabled = false; document.getElementById('connectBtn').disabled = false;
+      document.getElementById('flashBtn').disabled = false;
+      document.getElementById('eraseBtn').disabled = false;
+      document.getElementById('connectBtn').disabled = false;
     }
   }
 
+  // ── MODAL ─────────────────────────────────────────
   function openModal() {
     const body = document.getElementById('modalBody');
-    if (!releases.length) body.innerHTML = `<div style="padding:16px 0">${t('noReleases')}</div>`;
-    else {
-      const locale = lang === 'ru' ? 'ru-RU' : 'en-US';
+    if (!releases.length) {
+      body.innerHTML = `<div class="release-loading" style="padding:16px 0">${t('noReleases')}</div>`;
+    } else {
+      const locale = lang === 'ru' ? 'ru-RU' : 'en-GB';
       body.innerHTML = releases.map(r => {
         const date = new Date(r.published_at).toLocaleDateString(locale, {day:'numeric',month:'long',year:'numeric'});
-        const body_text = r.body ? r.body.replace(/### /g,'\n### ').replace(/## /g,'\n## ').trim() : '—';
-        return `<div style="padding:16px 0;border-bottom:1px solid var(--outline-variant)">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-            <div class="release-badge">${r.tag_name}</div>
+        const body_text = r.body
+          ? r.body
+              .replace(/### /g, '\n### ')
+              .replace(/## /g, '\n## ')
+              .trim()
+          : '—';
+        return `<div class="modal-release">
+          <div class="modal-release-header">
+            <div class="release-ver">${r.tag_name}</div>
             <div>
-              <div style="font-weight:500;color:var(--on-surface);font-size:16px">${r.name || r.tag_name}</div>
+              <div style="font-size:14px;font-weight:500">${r.name || r.tag_name}</div>
               <div style="font-size:12px;color:var(--on-surface-variant)">${date}</div>
             </div>
           </div>
-          <div style="line-height:1.6;white-space:pre-wrap">${body_text}</div>
+          <div class="modal-release-body">${body_text}</div>
         </div>`;
       }).join('');
     }
-    document.getElementById('modalScrim').classList.add('show'); document.body.style.overflow = 'hidden';
+    document.getElementById('modalScrim').classList.add('show');
+    document.body.style.overflow = 'hidden';
   }
 
-  function closeModal() { document.getElementById('modalScrim').classList.remove('show'); document.body.style.overflow = ''; }
-  function closeModalOutside(e) { if (e.target === document.getElementById('modalScrim')) closeModal(); }
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+  function closeModal() {
+    document.getElementById('modalScrim').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modalScrim')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 </script>
 </body>
 </html>
